@@ -17,6 +17,8 @@ option = {
   
   //custom params here
 }
+
+ window.startintent.readDataFromContentUri(uri: string, success :((result:any)=>void, error(()=>void);
 ```
 Example:
 ```
