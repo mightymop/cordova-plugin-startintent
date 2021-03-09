@@ -1,1 +1,29 @@
-"# cordova-plugin-startintent" 
+Supports Android:
+
+1. cordova plugin add https://github.com/mightymop/cordova-plugin-startintent.git
+2. For Typescript useage add: 
+        /// <reference types="cordova-plugin-startintent" />" 
+   to main ts file
+3. Usage:
+
+window.startintent.startActivity(option, success, error);
+option = {
+  action: string, //required
+  callbackurl: string, //required
+  componentname: {  //optional
+    package: string,
+    class: string
+  }
+  
+  //custom params here
+}
+
+Example:
+
+ window.startintent.startActivity({action:'target.intent.action',callbackurl:'callback.filter.intent.of.caller.app',componentname:{"package":"target.apps.package.name","class":"target.apps.class.name.fqn"}},
+                            function (res:any){
+                                console.log(res);
+                            },
+                            function (err:any){
+                                console.error(err);
+                            });
