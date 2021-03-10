@@ -28,7 +28,9 @@ import android.content.ContentResolver;
 import android.webkit.MimeTypeMap;
 
 public class StartIntent extends CordovaPlugin {
-    //public CallbackContext mCallbackContext;
+    public CallbackContext mCallbackContext;
+
+    private final static String TAG = "StartIntent";
 
     public void initialize(org.apache.cordova.CordovaInterface cordova, org.apache.cordova.CordovaWebView webView) {
         super.initialize(cordova, webView);
@@ -146,7 +148,7 @@ public class StartIntent extends CordovaPlugin {
             return false;
         }
 
-        this.onNewIntentCallbackContext = context;
+        this.mCallbackContext = context;
 
         PluginResult result = new PluginResult(PluginResult.Status.NO_RESULT);
         result.setKeepCallback(true);
@@ -154,18 +156,18 @@ public class StartIntent extends CordovaPlugin {
         return true;
     }
 
-    r/**
+    /**
      * Triggered on new intent
      *
      * @param intent
      */
     @Override
     public void onNewIntent(Intent intent) {
-        if (this.onNewIntentCallbackContext != null) {
+        if (this.mCallbackContext != null) {
 
             PluginResult result = new PluginResult(PluginResult.Status.OK, getIntentJson(intent));
             result.setKeepCallback(true);
-            this.onNewIntentCallbackContext.sendPluginResult(result);
+            this.mCallbackContext.sendPluginResult(result);
         }
     }
 
@@ -208,9 +210,9 @@ public class StartIntent extends CordovaPlugin {
                         }
 
                     } catch (JSONException e) {
-                        Log.d(pluginName, pluginName + " Error thrown during intent > JSON conversion");
-                        Log.d(pluginName, e.getMessage());
-                        Log.d(pluginName, Arrays.toString(e.getStackTrace()));
+                        Log.d(TAG, " Error thrown during intent > JSON conversion");
+                        Log.d(TAG, e.getMessage());
+                        Log.d(TAG, Arrays.toString(e.getStackTrace()));
                     }
 
                 }
@@ -238,9 +240,9 @@ public class StartIntent extends CordovaPlugin {
 
             return intentJSON;
         } catch (JSONException e) {
-            Log.d(pluginName, pluginName + " Error thrown during intent > JSON conversion");
-            Log.d(pluginName, e.getMessage());
-            Log.d(pluginName, Arrays.toString(e.getStackTrace()));
+            Log.d(TAG, " Error thrown during intent > JSON conversion");
+            Log.d(TAG, e.getMessage());
+            Log.d(TAG, Arrays.toString(e.getStackTrace()));
 
             return null;
         }
@@ -353,3 +355,4 @@ public class StartIntent extends CordovaPlugin {
         return false;
     }
 }
+
