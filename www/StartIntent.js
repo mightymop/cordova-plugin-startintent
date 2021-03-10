@@ -8,6 +8,15 @@ var startintent = {
 	},
 	readDataFromContentUri : function (uri, success, error ) {
 		exec(success, error, 'StartIntent', 'readDataFromContentUri', [uri]);
+	},
+	setNewIntentHandler : function (uri, success, error ) {
+		exec(success, error, 'StartIntent', 'setNewIntentHandler', [uri]);
+	},
+	getCordovaIntent : function (uri, success, error ) {
+		exec(success, error, 'StartIntent', 'getCordovaIntent', [uri]);
+	},
+	getRealPathFromContentUrl : function (uri, success, error ) {
+		exec(success, error, 'StartIntent', 'getRealPathFromContentUrl', [uri]);
 	}
 };
 
