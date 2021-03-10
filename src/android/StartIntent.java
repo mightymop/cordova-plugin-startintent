@@ -1,35 +1,34 @@
 package de.mopsdom.startintent;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.util.*;
-import android.util.*;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import android.provider.MediaStore;
-import android.database.Cursor;
 import android.content.ClipData;
-import android.content.Intent;
-import android.net.Uri;
+import android.content.ComponentName;
 import android.content.ContentResolver;
-import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.PluginResult;
-import android.content.ComponentName;
-import org.apache.cordova.PluginResult.Status;
-import android.os.Build;
-import android.os.Bundle;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.lang.reflect.Array;
+import java.util.Arrays;
+import java.util.Iterator;
 
 public class StartIntent extends CordovaPlugin {
 
     private final String pluginName = "cordova-plugin-startintent";
     private CallbackContext onNewIntentCallbackContext = null;
 
-	private boolean startActivityFromCordova(JSONObject params) throws JSONException
-    {
+    private boolean startActivityFromCordova(JSONObject params) throws JSONException {
         // Intent erstellen
         Intent i = new Intent();
 
@@ -37,35 +36,26 @@ public class StartIntent extends CordovaPlugin {
         i.addCategory(Intent.CATEGORY_DEFAULT);
 
         // Flags für Anwendungsstart übergeben: weil externe APP: NEW_TASK und SINGLE_TOP
-        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP|Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
-        
-        if (params!=null) {
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+
+        if (params != null) {
 
             Iterator<String> keys = params.keys();
 
-            while(keys.hasNext()) {
+            while (keys.hasNext()) {
                 String key = keys.next();
-                  
-                if (key.equals("action"))
-                {
+
+                if (key.equals("action")) {
                     i.setAction(params.getString(key));
-                }
-                else
-                if (key.equals("datauri"))
-                {
+                } else if (key.equals("datauri")) {
                     i.setData(Uri.parse(params.getString(key)));
-                }
-                else
-                if (key.equals("componentname"))
-                {
+                } else if (key.equals("componentname")) {
                     JSONObject jsonObject = (JSONObject) params.get(key);
                     jsonObject.getString("package");
-                    ComponentName componentName = new ComponentName(jsonObject.getString("package"),jsonObject.getString("class"));
-                    i.putExtra("cmpname",this.cordova.getActivity().getComponentName());
+                    ComponentName componentName = new ComponentName(jsonObject.getString("package"), jsonObject.getString("class"));
+                    i.putExtra("cmpname", this.cordova.getActivity().getComponentName());
                     i.setComponent(componentName);
-                }
-                else
-                {
+                } else {
                     i.putExtra(key, params.getString(key));
                 }
             }
@@ -80,66 +70,72 @@ public class StartIntent extends CordovaPlugin {
         }
     }
 
-    private String readDataFromContentUri(Uri uri)
-    {
-        if (uri!=null)
-        {
-            try
-            {
+    private String readDataFromContentUri(Uri uri) {
+        if (uri != null) {
+            try {
                 android.os.ParcelFileDescriptor inputPFD = this.cordova.getActivity().getContentResolver().openFileDescriptor(uri, "r");
 
                 java.io.FileDescriptor fd = inputPFD.getFileDescriptor();
 
-                java.io.BufferedInputStream bin = new java.io.BufferedInputStream(new  java.io.FileInputStream(fd));
+                java.io.BufferedInputStream bin = new java.io.BufferedInputStream(new java.io.FileInputStream(fd));
                 byte[] buffer = new byte[1024];
                 int length;
-                java.io.ByteArrayOutputStream bout = new  java.io.ByteArrayOutputStream();
-                while((length = bin.read(buffer)) > 0)
-                {
+                java.io.ByteArrayOutputStream bout = new java.io.ByteArrayOutputStream();
+                while ((length = bin.read(buffer)) > 0) {
                     bout.write(buffer, 0, length);
                 }
 
                 bout.flush();
                 bin.close();
                 bout.close();
-                this.cordova.getActivity().getContentResolver().delete(uri,null,null);
+                this.cordova.getActivity().getContentResolver().delete(uri, null, null);
                 return new String(bout.toByteArray());
             } catch (Exception e) {
 
             }
 
             return null;
-        }
-        else
-        {
+        } else {
             return null;
         }
     }
-	
-    /**
-     * Generic plugin command executor
-     *
-     * @param action
-     * @param data
-     * @param callbackContext
-     * @return
-     */
+
     @Override
     public boolean execute(final String action, final JSONArray data, final CallbackContext callbackContext) {
-        Log.d(pluginName, pluginName + " called with options: " + data);
-
-        Class params[] = new Class[2];
-        params[0] = JSONArray.class;
-        params[1] = CallbackContext.class;
 
         try {
-            Method method = this.getClass().getDeclaredMethod(action, params);
-            method.invoke(this, data, callbackContext);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            if (action.equals("startActivityFromCordova")) {
+                if (startActivityFromCordova(new JSONObject(data.getString(0)))) {
+                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, ""));
+                    return true;
+                } else {
+                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, ""));
+                    return true;
+                }
+            } else if (action.equals("readDataFromContentUri")) {
+                String resultstring = null;
+                if ((resultstring = readDataFromContentUri(Uri.parse(data.getString(0)))) != null) {
+                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, resultstring));
+                    return true;
+                } else {
+                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, ""));
+                    return true;
+                }
+            } else if (action.equals("setNewIntentHandler")) {
+                setNewIntentHandler(data, callbackContext);
+                return true;
+            } else if (action.equals("getCordovaIntent")) {
+                getCordovaIntent(data, callbackContext);
+                return true;
+            } else if (action.equals("getRealPathFromContentUrl")) {
+                getRealPathFromContentUrl(data, callbackContext);
+                return true;
+            }
+            return false;
+        } catch (Exception e) {
+            Log.e(pluginName, e.getMessage(), e);
+            return false;
         }
-
-        return true;
     }
 
     /**
@@ -148,8 +144,8 @@ public class StartIntent extends CordovaPlugin {
      * @param data
      * @param context
      */
-    public boolean getCordovaIntent (final JSONArray data, final CallbackContext context) {
-        if(data.length() != 0) {
+    public boolean getCordovaIntent(final JSONArray data, final CallbackContext context) {
+        if (data.length() != 0) {
             context.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
             return false;
         }
@@ -166,8 +162,8 @@ public class StartIntent extends CordovaPlugin {
      * @param context
      * @return
      */
-    public boolean setNewIntentHandler (final JSONArray data, final CallbackContext context) {
-        if(data.length() != 1) {
+    public boolean setNewIntentHandler(final JSONArray data, final CallbackContext context) {
+        if (data.length() != 1) {
             context.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
             return false;
         }
@@ -210,7 +206,7 @@ public class StartIntent extends CordovaPlugin {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             clipData = intent.getClipData();
-            if(clipData != null) {
+            if (clipData != null) {
                 int clipItemCount = clipData.getItemCount();
                 items = new JSONObject[clipItemCount];
 
@@ -225,7 +221,7 @@ public class StartIntent extends CordovaPlugin {
                         items[i].put("text", item.getText());
                         items[i].put("uri", item.getUri());
 
-                        if(item.getUri() != null) {
+                        if (item.getUri() != null) {
                             String type = cR.getType(item.getUri());
                             String extension = mime.getExtensionFromMimeType(cR.getType(item.getUri()));
 
@@ -247,7 +243,7 @@ public class StartIntent extends CordovaPlugin {
             intentJSON = new JSONObject();
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                if(items != null) {
+                if (items != null) {
                     intentJSON.put("clipItems", new JSONArray(items));
                 }
             }
@@ -310,15 +306,15 @@ public class StartIntent extends CordovaPlugin {
     }
 
     public boolean getRealPathFromContentUrl(final JSONArray data, final CallbackContext context) {
-        if(data.length() != 1) {
+        if (data.length() != 1) {
             context.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
             return false;
         }
         ContentResolver cR = this.cordova.getActivity().getApplicationContext().getContentResolver();
         Cursor cursor = null;
         try {
-            String[] proj = { MediaStore.Images.Media.DATA };
-            cursor = cR.query(Uri.parse(data.getString(0)),  proj, null, null, null);
+            String[] proj = {MediaStore.Images.Media.DATA};
+            cursor = cR.query(Uri.parse(data.getString(0)), proj, null, null, null);
             int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
             cursor.moveToFirst();
 
