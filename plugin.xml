@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+        id="cordova-plugin-startintent"
+        version="1.1.0">
+
+  <name>startintent</name>
+
+  <engines>
+    <engine name="cordova" version=">=3.4.0"/>
+  </engines>
+
+  <asset src="www/StartIntent.js" target="js/StartIntent.js"/>
+
+  <js-module src="www/StartIntent.js" name="StartIntent">
+     <clobbers target="startintent" />
+  </js-module>
+
+  <platform name="android">
+    <framework src="com.android.support:support-v4:+" />
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="StartIntent">
+        <param name="android-package" value="de.mopsdom.startintent.StartIntent"/>
+        <!--param name="onload" value="true"/-->
+      </feature>
+    </config-file>
+
+    <config-file parent="/manifest/application" target="AndroidManifest.xml">
+        <provider
+            android:name="de.mopsdom.startintent.OpenfileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true"
+            >
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" 
+                tools:node="merge"
+                />
+        </provider>
+    </config-file>
+
+    <source-file src="src/android/StartIntent.java" target-dir="src/de/mopsdom/startintent"/>
+    <source-file src="src/android/OpenfileProvider.java" target-dir="src/de/mopsdom/startintent"/>
+    <source-file src="src/android/provider_paths.xml" target-dir="res/xml"/>
+
+  </platform>
+
+
+</plugin>
