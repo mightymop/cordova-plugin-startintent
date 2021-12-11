@@ -33,8 +33,7 @@
             >
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths" 
-                tools:node="merge"
+                android:resource="@xml/provider_paths"
                 />
         </provider>
     </config-file>
