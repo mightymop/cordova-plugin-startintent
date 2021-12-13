@@ -28,6 +28,10 @@ var startintent = {
     getUriForFile: function(filename, cb)
     {
         exec(cb, cb, 'StartIntent', 'getUriForFile', [filename]);
+    },
+    deleteUri: function(uri, cb)
+    {
+        exec(cb, cb, 'StartIntent', 'deleteUri', [uri]);
     }
 };
 

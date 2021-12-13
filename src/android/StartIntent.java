@@ -233,6 +233,25 @@ public class StartIntent extends CordovaPlugin {
         }
     }
 
+    private boolean deleteUri(Uri uri)
+    {
+        if (uri != null) {
+            Log.i(pluginName,"deleteUri (uri = "+uri.toString()+")");
+            try
+            {
+                int result = this.cordova.getActivity().getContentResolver().delete(uri, null, null);
+                return result==1?true:false;
+            } catch (Exception e) {
+                Log.e(pluginName, e.getMessage(), e);
+            }
+
+            return false;
+        } else {
+            Log.i(pluginName,"deleteUri exit (uri was null)");
+            return false;
+        }
+    }
+
     private String readDataFromContentUri(Uri uri) {
         Log.i(pluginName,"readDataFromContentUri start");
         if (uri != null) {
@@ -323,7 +342,18 @@ public class StartIntent extends CordovaPlugin {
                     callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, uri.toString()));
                     return true;
                 }
-                else 
+                else
+                {
+                    return false;
+                }
+            }
+            else if (action.equals("deleteUri")) {
+                if (deleteUri(Uri.parse(data.getString(0))))
+                {
+                    callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
+                    return true;
+                }
+                else
                 {
                     return false;
                 }
@@ -528,7 +558,7 @@ public class StartIntent extends CordovaPlugin {
     public String getPackageID() {
         Log.i(pluginName,"getPackageID...");
         //return  (String) org.apache.cordova.BuildHelper.getBuildConfigValue(cordova.getActivity(), "APPLICATION_ID");
-		return cordova.getActivity().getPackageName();
+        return cordova.getActivity().getPackageName();
     }
 
     public Uri getUri(String file)
