@@ -22,7 +22,7 @@ public class OpenfileProvider extends FileProvider {
 	private String external = null;
 
     public String getProviderURI(){
-        return "content://"+getContext().getPackageName()+".provider";
+        return "content://"+getContext().getPackageName()+".startintent.provider";
     }
 
 	private void pathCheck()
