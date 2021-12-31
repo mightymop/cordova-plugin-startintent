@@ -27,7 +27,7 @@
     <config-file parent="/manifest/application" target="AndroidManifest.xml">
         <provider
             android:name="de.mopsdom.startintent.OpenfileProvider"
-            android:authorities="${applicationId}.provider"
+            android:authorities="${applicationId}.startintent.provider"
             android:exported="false"
             android:grantUriPermissions="true"
             >

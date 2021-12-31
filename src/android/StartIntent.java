@@ -646,7 +646,7 @@ public class StartIntent extends CordovaPlugin {
         Uri uri = null;
      
         try {
-            uri = OpenfileProvider.getUriForFile(context, packageid+".provider", ffile);
+            uri = OpenfileProvider.getUriForFile(context, packageid+".startintent.provider", ffile);
         }
         catch (Exception e)
         {
