@@ -72,7 +72,7 @@ public class StartIntent extends CordovaPlugin {
                     ComponentName componentName = new ComponentName(jsonObject.getString("package"), jsonObject.getString("class"));
                     i.putExtra("cmpname", this.cordova.getActivity().getComponentName());
                     i.setComponent(componentName);
-                } else 
+                } else
                 if (key.equals("flags")) {
                     flagsset=true;
                     JSONArray flags = (JSONArray) params.get(key);
@@ -256,7 +256,7 @@ public class StartIntent extends CordovaPlugin {
         Log.i(pluginName,"readDataFromContentUri start");
         if (uri != null) {
             Log.i(pluginName,"readDataFromContentUri (uri = "+uri.toString()+")");
-            try 
+            try
             {
                 android.os.ParcelFileDescriptor inputPFD = this.cordova.getActivity().getContentResolver().openFileDescriptor(uri, "r");
 
@@ -428,7 +428,12 @@ public class StartIntent extends CordovaPlugin {
         JSONObject intentJSON = null;
         ClipData clipData = null;
         JSONObject[] items = null;
-        ContentResolver cR = this.cordova.getActivity().getApplicationContext().getContentResolver();
+        Context ctx = this.cordova.getActivity().getApplicationContext();
+        if (ctx==null)
+        {
+          ctx=this.cordova.getActivity().getWindow().getContext();
+        }
+        ContentResolver cR = ctx.getContentResolver();
         MimeTypeMap mime = MimeTypeMap.getSingleton();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -475,9 +480,14 @@ public class StartIntent extends CordovaPlugin {
                 }
             }
 
+            String referrer="";
+            if (cordova.getActivity().getReferrer()!=null&&cordova.getActivity().getReferrer().getHost()!=null)
+            {
+              referrer = cordova.getActivity().getReferrer().getHost();
+            }
             intentJSON.put("type", intent.getType());
-            intentJSON.put("caller",cordova.getActivity().getReferrer().getHost());
-            intentJSON.put("extras", toJsonObject(intent.getExtras()));
+            intentJSON.put("caller",referrer);
+            intentJSON.put("extras", intent.getExtras()!=null?toJsonObject(intent.getExtras()):"");
             intentJSON.put("action", intent.getAction());
             intentJSON.put("categories", intent.getCategories());
             intentJSON.put("flags", intent.getFlags());
@@ -486,7 +496,7 @@ public class StartIntent extends CordovaPlugin {
             intentJSON.put("package", intent.getPackage());
             Log.i(pluginName,intentJSON.toString());
             return intentJSON;
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Log.d(pluginName, pluginName + " Error thrown during intent > JSON conversion");
             Log.d(pluginName, e.getMessage());
             Log.d(pluginName, Arrays.toString(e.getStackTrace()));
@@ -644,7 +654,7 @@ public class StartIntent extends CordovaPlugin {
         }
 
         Uri uri = null;
-     
+
         try {
             uri = OpenfileProvider.getUriForFile(context, packageid+".startintent.provider", ffile);
         }
