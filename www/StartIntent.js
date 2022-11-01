@@ -32,7 +32,11 @@ var startintent = {
     deleteUri: function(uri, cb)
     {
         exec(cb, cb, 'StartIntent', 'deleteUri', [uri]);
-    }
+    },
+	isPackageAvailable: function(params,success, error)
+	{
+		exec(success, error, 'StartIntent', 'isPackageAvailable', [params]); //params = array
+	}
 };
 
 module.exports = startintent;

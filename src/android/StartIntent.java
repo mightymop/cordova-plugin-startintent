@@ -5,6 +5,8 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -306,7 +308,12 @@ public class StartIntent extends CordovaPlugin {
                     callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, ""));
                     return true;
                 }
-            } else if (action.equals("readDataFromContentUri")) {
+            }
+            else
+              if (action.equals("isPackageAvailable")) {
+                  callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, isPackageAvailable(data.getJSONArray(0))));
+                  return true;
+              } else if (action.equals("readDataFromContentUri")) {
                 String resultstring = null;
                 if ((resultstring = readDataFromContentUri(Uri.parse(data.getString(0)))) != null) {
                     callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, resultstring));
@@ -563,6 +570,28 @@ public class StartIntent extends CordovaPlugin {
         {
             callbackContext.error(e.getMessage());
         }
+    }
+
+    public JSONArray isPackageAvailable(JSONArray packageIds)
+    {
+      JSONArray result = new JSONArray();
+
+      PackageManager pm= cordova.getActivity().getPackageManager();
+
+      for (int n=0;n<packageIds.length();n++)
+      {
+        try
+        {
+          String packageId = packageIds.getString(n);
+          PackageInfo info=pm.getPackageInfo(packageId,PackageManager.GET_META_DATA);
+          if (info!=null)
+          {
+            result.put(packageId);
+          }
+        } catch (Exception e) {}
+      }
+
+      return result;
     }
 
     public String getPackageID() {
