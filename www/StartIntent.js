@@ -36,6 +36,10 @@ var startintent = {
 	isPackageAvailable: function(params,success, error)
 	{
 		exec(success, error, 'StartIntent', 'isPackageAvailable', [params]); //params = array
+	},
+	isActionAvailable: function(params,success, error)
+	{
+		exec(success, error, 'StartIntent', 'isActionAvailable', [params]); //params = array
 	}
 };
 

@@ -5,8 +5,10 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -26,6 +28,7 @@ import java.io.File;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 public class StartIntent extends CordovaPlugin {
 
@@ -313,6 +316,11 @@ public class StartIntent extends CordovaPlugin {
               if (action.equals("isPackageAvailable")) {
                   callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, isPackageAvailable(data.getJSONArray(0))));
                   return true;
+              }
+              else
+              if (action.equals("isActionAvailable")) {
+                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, isActionAvailable(data.getJSONArray(0))));
+                return true;
               } else if (action.equals("readDataFromContentUri")) {
                 String resultstring = null;
                 if ((resultstring = readDataFromContentUri(Uri.parse(data.getString(0)))) != null) {
@@ -593,6 +601,29 @@ public class StartIntent extends CordovaPlugin {
 
       return result;
     }
+
+  public JSONArray isActionAvailable(JSONArray actionFilter)
+  {
+    JSONArray result = new JSONArray();
+
+    PackageManager pm= cordova.getActivity().getPackageManager();
+    List<ApplicationInfo> packages = pm.getInstalledApplications(0);
+
+    for (int n=0;n<actionFilter.length();n++)
+    {
+      try
+      {
+        String filter = actionFilter.getString(n);
+        List<ResolveInfo> res = pm.queryIntentActivities(new Intent(filter, null), 0);
+        if (res != null && res.size() > 0) {
+          result.put(filter);
+        }
+      }
+      catch (Exception e) {}
+    }
+
+    return result;
+  }
 
     public String getPackageID() {
         Log.i(pluginName,"getPackageID...");
