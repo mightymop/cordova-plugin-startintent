@@ -345,6 +345,11 @@ public class StartIntent extends CordovaPlugin {
                 System.exit(0);
                 return true;
             }
+            else if (action.equals("closeApp")) {
+                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK,""));
+                this.cordova.getActivity().finish();
+                return true;
+            }
             else if (action.equals("open")) {
                 this.openNewActivity(cordova.getActivity(),data.getString(0),callbackContext);
                 callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));

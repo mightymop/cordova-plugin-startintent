@@ -21,6 +21,9 @@ var startintent = {
 	killApp : function (success, error ) {
 		exec(success, error, 'StartIntent', 'killApp', []);
 	},
+	closeApp : function (success, error ) {
+		exec(success, error, 'StartIntent', 'closeApp', []);
+	},
 	open: function(filename, cb)
     {
         exec(cb, cb, 'StartIntent', 'open', [filename]);
