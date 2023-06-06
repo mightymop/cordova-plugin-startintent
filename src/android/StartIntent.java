@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
@@ -282,7 +283,7 @@ public class StartIntent extends CordovaPlugin {
                     bin.close();
                     bout.close();
                     this.cordova.getActivity().getContentResolver().delete(uri, null, null);
-                    return new String(bout.toByteArray());
+                    return Base64.encodeToString(bout.toByteArray(),Base64.DEFAULT);
                 }
                 else {
                     Log.i(pluginName,"FileDescriptor was null");

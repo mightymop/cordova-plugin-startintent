@@ -19,6 +19,7 @@ option = {
 }
 
  window.startintent.readDataFromContentUri(uri: string, success :((result:any)=>void, error(()=>void);
+ //result in base64
 ```
 Example:
 ```
