@@ -568,11 +568,16 @@ public class StartIntent extends CordovaPlugin {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
 
-        Uri uri = getUri(file);
-        android.content.ContentResolver  cR = context.getContentResolver();
-        String mime = cR.getType(uri);
-
-        intent.setDataAndType(uri, mime);
+        if (!file.startsWith("data:")) {
+          Uri uri = getUri(file);
+          android.content.ContentResolver cR = context.getContentResolver();
+          String mime = cR.getType(uri);
+          intent.setDataAndType(uri, mime);
+        }
+        else {
+          String mime = file.split(";")[0].replace("data:","");
+          intent.setDataAndType(Uri.parse(file), mime);
+        }
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
         try
