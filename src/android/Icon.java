@@ -167,7 +167,7 @@ public class Icon {
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
         byte[] byteArray = byteArrayOutputStream.toByteArray();
         String base64String = Base64.encodeToString(byteArray, Base64.NO_WRAP);
-        return "data:image/svg+xml;base64," + base64String;
+        return "data:image/png;base64," + base64String;
     }
 
     private static String convertBitmapDrawableToDataUri(BitmapDrawable bitmapDrawable) {
