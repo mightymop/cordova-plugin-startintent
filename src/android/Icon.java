@@ -5,6 +5,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.drawable.AdaptiveIconDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.VectorDrawable;
@@ -32,7 +33,7 @@ public class Icon {
                 // Drawable in Data-URI konvertieren
                 try
                 {
-                    String datauri = convertDrawableToDataUri(appIcon);
+                    String datauri = convertDrawableToDataUri(ctx,appIcon);
 
                     if (datauri!=null) {
                         JSONObject obj = new JSONObject();
@@ -77,14 +78,56 @@ public class Icon {
         }
     }
 
-    private static String convertDrawableToDataUri(Drawable drawable) {
+    private static Bitmap drawableToBitmap(Context ctx,Drawable drawable) {
+        if (drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable) drawable).getBitmap();
+        } else if (drawable instanceof AdaptiveIconDrawable) {
+            AdaptiveIconDrawable adaptiveIconDrawable = (AdaptiveIconDrawable) drawable;
+            Bitmap bitmap = Bitmap.createBitmap(
+                    adaptiveIconDrawable.getIntrinsicWidth(),
+                    adaptiveIconDrawable.getIntrinsicHeight(),
+                    Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            adaptiveIconDrawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+            adaptiveIconDrawable.draw(canvas);
+            return bitmap;
+        } else {
+            Log.e(ctx.getPackageName(),"Unsupported drawable type: " + drawable.getClass().getSimpleName());
+            return null;
+        }
+    }
+
+    private static String convertDrawableToDataUri(Context ctx,Drawable drawable) {
         if (drawable instanceof VectorDrawable) {
             // Icon als Vector XML vorliegend
             return convertVectorDrawableToDataUri((VectorDrawable) drawable);
         } else {
             // Icon als Bitmap oder PNG vorliegend
-            return convertBitmapDrawableToDataUri((BitmapDrawable) drawable);
+            if (drawable instanceof AdaptiveIconDrawable)
+            {
+                Bitmap bmp = drawableToBitmap(ctx,drawable);
+                if (bmp!=null)
+                {
+                    return convertBitmapToDataUri(bmp);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else {
+                return convertBitmapDrawableToDataUri((BitmapDrawable) drawable);
+            }
         }
+    }
+
+    private static String convertBitmapToDataUri(Bitmap bitmap) {
+
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        String base64String = Base64.encodeToString(byteArray, Base64.DEFAULT);
+        return "data:image/png;base64," + base64String;
     }
 
     private static  String convertVectorDrawableToDataUri(VectorDrawable vectorDrawable) {
@@ -105,11 +148,6 @@ public class Icon {
 
     private static String convertBitmapDrawableToDataUri(BitmapDrawable bitmapDrawable) {
         Bitmap bitmap = bitmapDrawable.getBitmap();
-
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-        byte[] byteArray = byteArrayOutputStream.toByteArray();
-        String base64String = Base64.encodeToString(byteArray, Base64.DEFAULT);
-        return "data:image/png;base64," + base64String;
+        return convertBitmapToDataUri(bitmap);
     }
 }
