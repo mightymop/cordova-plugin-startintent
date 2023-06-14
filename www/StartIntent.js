@@ -48,7 +48,7 @@ var startintent = {
 	{
 		exec(success, error, 'StartIntent', 'getIcons', params); //params = array
 	},
-	getAllIcons: function(params,success, error)
+	getAllIcons: function(success, error)
 	{
 		exec(success, error, 'StartIntent', 'getAllIcons', []); 
 	}
