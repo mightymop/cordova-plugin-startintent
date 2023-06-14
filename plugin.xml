@@ -36,6 +36,10 @@
                 />
         </provider>
     </config-file>
+	<config-file target="AndroidManifest.xml" parent="/manifest">
+	  <uses-permission android:name="android.permission.GET_PACKAGE_SIZE" />
+	  <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+	</config-file>
 
 	<source-file src="src/android/Icon.java" target-dir="src/de/mopsdom/startintent"/>
     <source-file src="src/android/StartIntent.java" target-dir="src/de/mopsdom/startintent"/>

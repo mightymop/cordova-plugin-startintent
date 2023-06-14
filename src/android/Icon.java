@@ -1,8 +1,11 @@
 package de.mopsdom.startintent;
 
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.AdaptiveIconDrawable;
@@ -50,21 +53,42 @@ public class Icon {
         return resultArray;
     }
 
-    private static List<String> getInstalledAppPackageNames(Context context) {
-        List<String> packageNames = new ArrayList<>();
-        PackageManager packageManager = context.getPackageManager();
-        List<ApplicationInfo> appInfos = packageManager.getInstalledApplications(0);
-        for (ApplicationInfo appInfo : appInfos) {
-            packageNames.add(appInfo.packageName);
-        }
-        return packageNames;
-    }
-
     public static JSONArray getAllIcons(Context ctx)
     {
-        List<String> packageNames = getInstalledAppPackageNames(ctx);
+        JSONArray resultArray = new JSONArray();
 
-        return getIcons(ctx,packageNames.toArray(new String[packageNames.size()]));
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        PackageManager packageManager = ctx.getPackageManager();
+        List<ResolveInfo> resolveInfos = packageManager.queryIntentActivities(intent, 0);
+
+        for (ResolveInfo resolveInfo : resolveInfos) {
+            ComponentName componentName = new ComponentName(resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name);
+            try {
+                Drawable appIcon = packageManager.getActivityIcon(componentName);
+
+                if (appIcon!=null) {
+                    // Drawable in Data-URI konvertieren
+                    try
+                    {
+                        String datauri = convertDrawableToDataUri(ctx,appIcon);
+
+                        if (datauri!=null) {
+                            JSONObject obj = new JSONObject();
+                            obj.put("packagename", componentName.getPackageName());
+                            obj.put("datauri", datauri);
+                            resultArray.put(obj);
+                        }
+                    } catch (Exception e) {
+                        Log.e(ctx.getPackageName(), e.getMessage(), e);
+                    }
+                }
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.e(ctx.getPackageName(), e.getMessage(), e);
+            }
+        }
+
+        return resultArray;
     }
 
     private static Drawable getAppIcon(Context ctx, String packageName) {
