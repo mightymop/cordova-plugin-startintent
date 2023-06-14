@@ -37,6 +37,7 @@
         </provider>
     </config-file>
 
+	<source-file src="src/android/Icon.java" target-dir="src/de/mopsdom/startintent"/>
     <source-file src="src/android/StartIntent.java" target-dir="src/de/mopsdom/startintent"/>
     <source-file src="src/android/OpenfileProvider.java" target-dir="src/de/mopsdom/startintent"/>
     <source-file src="src/android/provider_paths.xml" target-dir="res/xml"/>

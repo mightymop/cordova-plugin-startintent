@@ -43,6 +43,14 @@ var startintent = {
 	isActionAvailable: function(params,success, error)
 	{
 		exec(success, error, 'StartIntent', 'isActionAvailable', [params]); //params = array
+	},
+	getIcons: function(params,success, error)
+	{
+		exec(success, error, 'StartIntent', 'getIcons', params); //params = array
+	},
+	getAllIcons: function(params,success, error)
+	{
+		exec(success, error, 'StartIntent', 'getAllIcons', []); 
 	}
 };
 

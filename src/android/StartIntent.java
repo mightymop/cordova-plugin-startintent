@@ -14,7 +14,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Base64;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
@@ -283,7 +282,7 @@ public class StartIntent extends CordovaPlugin {
                     bin.close();
                     bout.close();
                     this.cordova.getActivity().getContentResolver().delete(uri, null, null);
-                    return Base64.encodeToString(bout.toByteArray(),Base64.NO_WRAP);
+                    return new String(bout.toByteArray());
                 }
                 else {
                     Log.i(pluginName,"FileDescriptor was null");
@@ -346,11 +345,6 @@ public class StartIntent extends CordovaPlugin {
                 System.exit(0);
                 return true;
             }
-            else if (action.equals("closeApp")) {
-                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK,""));
-                this.cordova.getActivity().finish();
-                return true;
-            }
             else if (action.equals("open")) {
                 this.openNewActivity(cordova.getActivity(),data.getString(0),callbackContext);
                 callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
@@ -379,6 +373,33 @@ public class StartIntent extends CordovaPlugin {
                     return false;
                 }
             }
+            else if (action.equals("getIcons")) {
+                  String[] stringArray = new String[data.length()];
+                  for (int i = 0; i < data.length(); i++) {
+                      try {
+                          stringArray[i] = data.getString(i);
+                      } catch (JSONException e) {
+                          Log.e(pluginName, e.getMessage(), e);
+                      }
+                  }
+
+                  if (stringArray.length>0)
+                  {
+                      JSONArray result = Icon.getIcons(this.cordova.getActivity(), stringArray);
+                      callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result.toString()));
+                  }
+                  else
+                  {
+                      callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR));
+                  }
+                  return true;
+            }
+            else if (action.equals("getAllIcons")) {
+                  JSONArray result = Icon.getAllIcons(this.cordova.getActivity());
+                  callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, result.toString()));
+                  return true;
+              }
+
             return false;
         } catch (Exception e) {
             Log.e(pluginName, e.getMessage(), e);
@@ -568,16 +589,11 @@ public class StartIntent extends CordovaPlugin {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_VIEW);
 
-        if (!file.startsWith("data:")) {
-          Uri uri = getUri(file);
-          android.content.ContentResolver cR = context.getContentResolver();
-          String mime = cR.getType(uri);
-          intent.setDataAndType(uri, mime);
-        }
-        else {
-          String mime = file.split(";")[0].replace("data:","");
-          intent.setDataAndType(Uri.parse(file), mime);
-        }
+        Uri uri = getUri(file);
+        android.content.ContentResolver  cR = context.getContentResolver();
+        String mime = cR.getType(uri);
+
+        intent.setDataAndType(uri, mime);
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
         try
