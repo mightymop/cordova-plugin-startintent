@@ -6,6 +6,9 @@ var startintent = {
 	startActivity : function (params, success, error ) {
 		exec(success, error, 'StartIntent', 'startActivityFromCordova', [params]);
 	},
+	startApplication : function (params, success, error ) {
+		exec(success, error, 'StartIntent', 'startApplicationFromCordova', [params]);
+	},
 	readDataFromContentUri : function (uri, success, error ) {
 		exec(success, error, 'StartIntent', 'readDataFromContentUri', [uri]);
 	},

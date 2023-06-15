@@ -35,6 +35,21 @@ public class StartIntent extends CordovaPlugin {
     private final String pluginName = "cordova-plugin-startintent";
     private CallbackContext onNewIntentCallbackContext = null;
 
+    private boolean startApplication(String packagename)
+    {
+      try {
+        Intent launchIntent = this.cordova.getActivity().getPackageManager().getLaunchIntentForPackage(packagename);
+        if (launchIntent != null) {
+          this.cordova.getActivity().startActivity(launchIntent);
+          return true;
+        } else {
+          return false;
+        }
+      } catch (Exception e) {
+        Log.e(pluginName, e.getMessage(), e);
+        return false;
+      }
+    }
     private boolean startActivityFromCordova(JSONObject params) throws JSONException {
         // Intent erstellen
         Intent i = new Intent();
@@ -311,6 +326,16 @@ public class StartIntent extends CordovaPlugin {
                     callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, ""));
                     return true;
                 }
+            }
+            else
+            if (action.equals("startApplicationFromCordova")) {
+              if (startApplication(data.getString(0))) {
+                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, ""));
+                return true;
+              } else {
+                callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, ""));
+                return true;
+              }
             }
             else
               if (action.equals("isPackageAvailable")) {
