@@ -20,40 +20,22 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Icon {
 
     public static JSONArray getIcons(Context ctx, String packageNames[])
     {
-        JSONArray resultArray = new JSONArray();
-        for (String itm : packageNames)
-        {
-            // Icon aus dem App-Paketnamen abrufen
-            Drawable appIcon = getAppIcon(ctx,itm);
-
-            if (appIcon!=null) {
-                // Drawable in Data-URI konvertieren
-                try
-                {
-                    String datauri = convertDrawableToDataUri(ctx,appIcon);
-
-                    if (datauri!=null) {
-                        JSONObject obj = new JSONObject();
-                        obj.put("packagename", itm);
-                        obj.put("datauri", datauri);
-                        resultArray.put(obj);
-                    }
-                } catch (Exception e) {
-                    Log.e(ctx.getPackageName(), e.getMessage(), e);
-                }
-            }
-        }
-
-        return resultArray;
+        return getAllIcons(ctx, Arrays.asList(packageNames));
     }
 
     public static JSONArray getAllIcons(Context ctx)
+    {
+        return getAllIcons(ctx,null);
+    }
+
+    private static JSONArray getAllIcons(Context ctx,List<String> packageNames)
     {
         JSONArray resultArray = new JSONArray();
 
@@ -63,28 +45,33 @@ public class Icon {
         List<ResolveInfo> resolveInfos = packageManager.queryIntentActivities(intent, 0);
 
         for (ResolveInfo resolveInfo : resolveInfos) {
-            ComponentName componentName = new ComponentName(resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name);
-            try {
-                Drawable appIcon = packageManager.getActivityIcon(componentName);
+            if (packageNames==null||packageNames.contains(resolveInfo.activityInfo.packageName))
+            {
+                ComponentName componentName = new ComponentName(resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name);
+                try {
+                    Drawable appIcon = packageManager.getActivityIcon(componentName);
 
-                if (appIcon!=null) {
-                    // Drawable in Data-URI konvertieren
-                    try
-                    {
-                        String datauri = convertDrawableToDataUri(ctx,appIcon);
+                    if (appIcon!=null) {
+                        // Drawable in Data-URI konvertieren
+                        try
+                        {
+                            String datauri = convertDrawableToDataUri(ctx,appIcon);
 
-                        if (datauri!=null) {
-                            JSONObject obj = new JSONObject();
-                            obj.put("packagename", componentName.getPackageName());
-                            obj.put("datauri", datauri);
-                            resultArray.put(obj);
+                            if (datauri!=null) {
+                                JSONObject obj = new JSONObject();
+                                obj.put("packagename", componentName.getPackageName());
+                                obj.put("activity_name",resolveInfo.activityInfo.name);
+                                obj.put("application_label",resolveInfo.activityInfo.nonLocalizedLabel);
+                                obj.put("datauri", datauri);
+                                resultArray.put(obj);
+                            }
+                        } catch (Exception e) {
+                            Log.e(ctx.getPackageName(), e.getMessage(), e);
                         }
-                    } catch (Exception e) {
-                        Log.e(ctx.getPackageName(), e.getMessage(), e);
                     }
+                } catch (PackageManager.NameNotFoundException e) {
+                    Log.e(ctx.getPackageName(), e.getMessage(), e);
                 }
-            } catch (PackageManager.NameNotFoundException e) {
-                Log.e(ctx.getPackageName(), e.getMessage(), e);
             }
         }
 
