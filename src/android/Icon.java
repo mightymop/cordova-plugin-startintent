@@ -58,10 +58,20 @@ public class Icon {
                             String datauri = convertDrawableToDataUri(ctx,appIcon);
 
                             if (datauri!=null) {
+                                String label = resolveInfo.activityInfo.nonLocalizedLabel!=null?resolveInfo.activityInfo.nonLocalizedLabel.toString():null;
+                                if (label==null)
+                                {
+                                    ApplicationInfo appInfo = resolveInfo.activityInfo.applicationInfo;
+                                    if (appInfo==null) {
+                                        appInfo = packageManager.getApplicationInfo(componentName.getPackageName(), 0);
+                                    }
+                                    label = packageManager.getApplicationLabel(appInfo).toString();
+                                }
+
                                 JSONObject obj = new JSONObject();
                                 obj.put("packagename", componentName.getPackageName());
                                 obj.put("activity_name",resolveInfo.activityInfo.name);
-                                obj.put("application_label",resolveInfo.activityInfo.nonLocalizedLabel);
+                                obj.put("application_label",label);
                                 obj.put("datauri", datauri);
                                 resultArray.put(obj);
                             }
