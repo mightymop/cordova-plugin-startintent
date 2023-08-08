@@ -439,9 +439,10 @@ public class StartIntent extends CordovaPlugin {
      * @param context
      */
     public boolean getCordovaIntent(final JSONArray data, final CallbackContext context) {
-        if (data.length() != 0) {
-            context.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
-            return false;
+        if (data!=null&&data.length() != 0) {
+            Log.w(pluginName,data.toString());
+            //context.sendPluginResult(new PluginResult(PluginResult.Status.INVALID_ACTION));
+            //return false;
         }
 
         Intent intent = cordova.getActivity().getIntent();
