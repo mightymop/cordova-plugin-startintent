@@ -297,7 +297,7 @@ public class StartIntent extends CordovaPlugin {
                     bin.close();
                     bout.close();
                     this.cordova.getActivity().getContentResolver().delete(uri, null, null);
-                    return new String(bout.toByteArray());
+                    return android.util.Base64.encodeToString(bout.toByteArray(),android.util.Base64.DEFAULT);
                 }
                 else {
                     Log.i(pluginName,"FileDescriptor was null");
