@@ -31,6 +31,10 @@ var startintent = {
     {
         exec(cb, cb, 'StartIntent', 'open', [filename]);
     },
+	openurl: function(url, cb)
+    {
+        exec(cb, cb, 'StartIntent', 'openurl', [url]);
+    },
     getUriForFile: function(filename, cb)
     {
         exec(cb, cb, 'StartIntent', 'getUriForFile', [filename]);

@@ -334,7 +334,13 @@ public class StartIntent extends CordovaPlugin {
         this.openNewActivity(cordova.getActivity(), data.getString(0), callbackContext);
         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
         return true;
-      } else if (action.equals("getUriForFile")) {
+      }
+      else if (action.equals("openurl")) {
+        this.openBrowser(cordova.getActivity(), data.getString(0), callbackContext);
+        callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK));
+        return true;
+      }
+      else if (action.equals("getUriForFile")) {
         Uri uri = getUri(data.getString(0));
         if (uri != null) {
           callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, uri.toString()));
@@ -533,6 +539,21 @@ public class StartIntent extends CordovaPlugin {
 
     intent.setDataAndType(uri, mime);
     intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+    try {
+      this.cordova.getActivity().startActivity(intent);
+      callbackContext.success();
+    } catch (Exception e) {
+      callbackContext.error(e.getMessage());
+    }
+  }
+
+  private void openBrowser(Context context, String url, CallbackContext callbackContext) {
+
+    Intent intent = new Intent();
+    intent.setAction(Intent.ACTION_VIEW);
+
+    intent.setData(Uri.parse(url));
 
     try {
       this.cordova.getActivity().startActivity(intent);
