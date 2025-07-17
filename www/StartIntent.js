@@ -24,6 +24,9 @@ var startintent = {
 	killApp : function (success, error ) {
 		exec(success, error, 'StartIntent', 'killApp', []);
 	},
+	exitApp : function (success, error ) {
+		exec(success, error, 'StartIntent', 'exitApp', []);
+	},
 	closeApp : function (success, error ) {
 		exec(success, error, 'StartIntent', 'closeApp', []);
 	},
