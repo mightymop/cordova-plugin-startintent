@@ -328,7 +328,7 @@ public class StartIntent extends CordovaPlugin {
       } else if (action.equals("killApp")) {
         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, ""));
         Log.d(pluginName, "Exiting App...");
-		this.cordova.getActivity().finish();  
+		this.cordova.getActivity().finishAffinity();  
 		Log.d(pluginName, "finish() called");
         new java.util.Timer().schedule(new java.util.TimerTask() {
 			@Override
@@ -341,7 +341,7 @@ public class StartIntent extends CordovaPlugin {
 	  else if (action.equals("exitApp")) {
         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, ""));
         Log.d(pluginName, "Exiting App...");
-		this.cordova.getActivity().finish();  
+		this.cordova.getActivity().finishAffinity();  
 		Log.d(pluginName, "finish() called");
         return true;
       }	
