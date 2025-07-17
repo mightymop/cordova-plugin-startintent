@@ -327,13 +327,22 @@ public class StartIntent extends CordovaPlugin {
         return true;
       } else if (action.equals("killApp")) {
         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, ""));
-        this.cordova.getActivity().finish();
-        System.exit(0);
+        Log.d(pluginName, "Exiting App...");
+		this.cordova.getActivity().finish();  
+		Log.d(pluginName, "finish() called");
+        new java.util.Timer().schedule(new java.util.TimerTask() {
+			@Override
+			public void run() {
+				System.exit(0);
+			}
+		}, 2000);
         return true;
       }
 	  else if (action.equals("exitApp")) {
         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, ""));
-        this.cordova.getActivity().finish();      
+        Log.d(pluginName, "Exiting App...");
+		this.cordova.getActivity().finish();  
+		Log.d(pluginName, "finish() called");
         return true;
       }	
 	  else if (action.equals("open")) {
