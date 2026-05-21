@@ -1,52 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
-        id="cordova-plugin-startintent"
-        version="1.1.0">
-
-  <name>startintent</name>
-
-  <engines>
-    <engine name="cordova" version=">=3.4.0"/>
-  </engines>
-
-  <asset src="www/StartIntent.js" target="js/StartIntent.js"/>
-
-  <js-module src="www/StartIntent.js" name="StartIntent">
-     <clobbers target="startintent" />
-  </js-module>
-
-  <platform name="android">
-    <config-file target="res/xml/config.xml" parent="/*">
-      <feature name="StartIntent">
-        <param name="android-package" value="de.mopsdom.startintent.StartIntent"/>
-        <!--param name="onload" value="true"/-->
-      </feature>
-    </config-file>
-
-    <config-file parent="/manifest/application" target="AndroidManifest.xml">
-        <provider
-            android:name="de.mopsdom.startintent.OpenfileProvider"
-            android:authorities="${applicationId}.startintent.provider"
-            android:exported="false"
-            android:grantUriPermissions="true"
-            >
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths" 
-                />
-        </provider>
-    </config-file>
-	<config-file target="AndroidManifest.xml" parent="/manifest">
-	  <uses-permission android:name="android.permission.GET_PACKAGE_SIZE" />
-	  <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
-	</config-file>
-
-	<source-file src="src/android/Icon.java" target-dir="src/de/mopsdom/startintent"/>
-    <source-file src="src/android/StartIntent.java" target-dir="src/de/mopsdom/startintent"/>
-    <source-file src="src/android/OpenfileProvider.java" target-dir="src/de/mopsdom/startintent"/>
-    <source-file src="src/android/provider_paths.xml" target-dir="res/xml"/>
-
-  </platform>
-
-
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0" id="cordova-plugin-startintent" version="1.1.0">
+	<name>startintent</name>
+	<engines>
+		<engine name="cordova" version=">=3.4.0"/>
+	</engines>
+	<asset src="www/StartIntent.js" target="js/StartIntent.js"/>
+	<js-module src="www/StartIntent.js" name="StartIntent">
+		<clobbers target="startintent"/>
+	</js-module>
+	<platform name="android">
+		<config-file target="res/xml/config.xml" parent="/*">
+			<feature name="StartIntent">
+				<param name="android-package" value="de.mopsdom.startintent.StartIntent"/>
+				<!--param name="onload" value="true"/-->
+			</feature>
+		</config-file>
+		<config-file parent="/manifest/application" target="AndroidManifest.xml">
+			<provider android:name="de.mopsdom.startintent.OpenfileProvider" android:authorities="${applicationId}.startintent.provider" android:exported="false" android:grantUriPermissions="true">
+				<meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/provider_paths"/>
+			</provider>
+		</config-file>
+		<config-file target="AndroidManifest.xml" parent="/manifest">
+			<uses-permission android:name="android.permission.GET_PACKAGE_SIZE"/>
+			<uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
+		</config-file>
+		<source-file src="src/android/Icon.java" target-dir="src/de/mopsdom/startintent"/>
+		<source-file src="src/android/StartIntent.java" target-dir="src/de/mopsdom/startintent"/>
+		<source-file src="src/android/OpenfileProvider.java" target-dir="src/de/mopsdom/startintent"/>
+		<source-file src="src/android/provider_paths.xml" target-dir="res/xml"/>
+	</platform>
+	<platform name="ios">
+		<config-file target="config.xml" parent="/*">
+			<!-- Der Name muss exakt mit @objc(StarttentPlugin) in Swift übereinstimmen -->
+			<feature name="startintent">
+				<param name="ios-package" value="StarttentPlugin"/>
+			</feature>
+		</config-file>
+		<!--config-file target="*-Info.plist" parent="LSApplicationQueriesSchemes">
+			<array>
+				<string>de.dtpublic.notes.service</string>        
+			</array>
+		</config-file-->
+		<!-- Weitere mögliche Ziel-Schemata im Array oben -->
+		<config-file target="*-Info.plist" parent="CFBundleURLTypes">
+			<array>
+				<dict>
+					<key>CFBundleURLName</key>
+					<string>$PACKAGE_NAME</string>
+					<key>CFBundleURLSchemes</key>
+					<array>
+						<!-- Hier NUR das Schema ohne :// eintragen -->						
+						<string>$PACKAGE_NAME.input</string>
+					</array>
+				</dict>
+			</array>
+		</config-file>
+		<!-- AppAuth via CocoaPods integrieren -->
+		<podspec>
+			<config>
+				<source url="https://github.com/CocoaPods/Specs.git"/>
+			</config>
+			<pods use-frameworks="true">
+				<pod name="AppAuth" spec="~> 1.6.2"/>
+			</pods>
+		</podspec>
+		<!-- Deine Swift Dateien -->
+		<source-file src="src/ios/StartIntentPlugin.swift"/>>
+	</platform>
 </plugin>

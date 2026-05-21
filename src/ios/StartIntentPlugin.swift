@@ -1,0 +1,216 @@
+import Foundation
+import Cordova
+
+@objc(StarttentPlugin)
+class StarttentPlugin: CDVPlugin {
+    
+    var lastIntentData: [String: Any]?
+    var onNewIntentCallbackId: String?
+    
+    // MARK: - App Start & Intent Handling
+    
+    override func pluginInitialize() {
+        super.pluginInitialize()
+        // Lauscht auf eintreffende URLs (wenn die App bereits im Hintergrund offen ist)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleOpenURL(_:)), name: NSNotification.Name.CDVPluginHandleOpenURL, object: nil)
+    }
+    
+    // Fängt die URL ab, über die die App aufgerufen wurde (Erzeuger/Konsument)
+    @objc override func handleOpenURL(_ notification: Notification) {
+        guard let url = notification.object as? URL else { return }
+        
+        // Parameter der eingehenden Uri auflösen (wie in Spezifikation gefordert)
+        let parsedData = parseUrlToIntentData(url: url)
+        self.lastIntentData = parsedData
+        
+        // JavaScript Listener benachrichtigen, falls registriert
+        if let callbackId = onNewIntentCallbackId {
+            let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: parsedData)
+            result?.setKeepCallbackAs(true)
+            self.commandDelegate.send(result, callbackId: callbackId)
+        }
+    }
+    
+    private func parseUrlToIntentData(url: URL) -> [String: Any] {
+        var data: [String: Any] = [:]
+        data["scheme"] = url.scheme
+        
+        // <Schema>://?Schlüssel1=Wert1&Schlüssel2=Wert2 in Dictionary wandeln
+        if let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+           let queryItems = components.queryItems {
+            var extras: [String: String] = [:]
+            for item in queryItems {
+                if let value = item.value {
+                    extras[item.name] = value
+                }
+            }
+            data["extras"] = extras
+        }
+        return data
+    }
+    
+    // MARK: - Cordova Interface Methoden (Senden / Prüfen)
+    
+    @objc(isPackageAvailable:)
+    func isPackageAvailable(_ command: CDVInvokedUrlCommand) {
+        var schemeToCheck = ""
+        
+        if let params = command.arguments.first as? [String: Any],
+           let scheme = params["package"] as? String ?? params["scheme"] as? String {
+            schemeToCheck = scheme
+        } else if let scheme = command.arguments.first as? String {
+            schemeToCheck = scheme
+        }
+        
+        if schemeToCheck.isEmpty {
+            self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Missing scheme"), callbackId: command.callbackId)
+            return
+        }
+        
+        // Entfernt ggf. "://" vom String, um ein sauberes URL Objekt zu erzeugen
+        let cleanScheme = schemeToCheck.replacingOccurrences(of: "://", with: "")
+        if let url = URL(string: "\(cleanScheme)://") {
+            let canOpen = UIApplication.shared.canOpenURL(url)
+            self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_OK, messageAs: canOpen), callbackId: command.callbackId)
+        } else {
+            self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid URL scheme format"), callbackId: command.callbackId)
+        }
+    }
+    
+    @objc(startApplicationFromCordova:)
+    func startApplicationFromCordova(_ command: CDVInvokedUrlCommand) {
+        handleInterAppCall(command: command)
+    }
+    
+    @objc(startActivityFromCordova:)
+    func startActivityFromCordova(_ command: CDVInvokedUrlCommand) {
+        handleInterAppCall(command: command)
+    }
+    
+    private func handleInterAppCall(command: CDVInvokedUrlCommand) {
+        guard let params = command.arguments.first as? [String: Any] else {
+            self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid parameters"), callbackId: command.callbackId)
+            return
+        }
+        
+        let scheme = params["package"] as? String ?? params["scheme"] as? String ?? params["action"] as? String ?? ""
+        var urlString = "\(scheme)://?"
+        
+        // Parameter auflösen (z.B. callbackurl, mode, binary_contentparameter)
+        if let extras = params["extras"] as? [String: Any] {
+            var queryItems: [String] = []
+            
+            // Spezifikation: "Die Werte der Parameter müssen Url kodiert werden"
+            var allowedChars = CharacterSet.urlQueryAllowed
+            allowedChars.remove(charactersIn: "!*'();:@&=+$,/?%#[]")
+            
+            for (key, value) in extras {
+                let stringValue = "\(value)"
+                if let encodedValue = stringValue.addingPercentEncoding(withAllowedCharacters: allowedChars) {
+                    queryItems.append("\(key)=\(encodedValue)")
+                }
+            }
+            urlString += queryItems.joined(separator: "&") // Spezifikation: Parameter werden durch "&" getrennt
+        }
+        
+        openUrlString(urlString, command: command)
+    }
+    
+    @objc(openurl:)
+    func openurl(_ command: CDVInvokedUrlCommand) {
+        guard let urlString = command.arguments.first as? String else {
+            self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Missing URL"), callbackId: command.callbackId)
+            return
+        }
+        openUrlString(urlString, command: command)
+    }
+    
+    private func openUrlString(_ urlString: String, command: CDVInvokedUrlCommand) {
+        guard let url = URL(string: urlString) else {
+            self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid URL string"), callbackId: command.callbackId)
+            return
+        }
+        
+        DispatchQueue.main.async {
+            // Spezifikation: Der Aufruf beginnt mit UIApplication.shared.openURL (Hier modernisiert zu .open)
+            UIApplication.shared.open(url, options: [:]) { success in
+                if success {
+                    self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_OK, messageAs: true), callbackId: command.callbackId)
+                } else {
+                    self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Could not open App. Scheme registered in Info.plist?"), callbackId: command.callbackId)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Cordova Interface Methoden (Empfangen)
+    
+    @objc(getCordovaIntent:)
+    func getCordovaIntent(_ command: CDVInvokedUrlCommand) {
+        let result: CDVPluginResult
+        if let intentData = lastIntentData {
+            result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: intentData)
+        } else {
+            result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: [String: Any]())
+        }
+        self.commandDelegate.send(result, callbackId: command.callbackId)
+    }
+    
+    @objc(setNewIntentHandler:)
+    func setNewetentHandler(_ command: CDVInvokedUrlCommand) {
+        self.onNewIntentCallbackId = command.callbackId
+        let result = CDVPluginResult(status: CDVCommandStatus_NO_RESULT)
+        result?.setKeepCallbackAs(true) // Hält den Callback offen für zukünftige App-Aufrufe
+        self.commandDelegate.send(result, callbackId: command.callbackId)
+    }
+    
+    // MARK: - App Beenden Methoden
+    
+    @objc(exitApp:)
+    func exitApp(_ command: CDVInvokedUrlCommand) { terminateApp(command: command) }
+    
+    @objc(killApp:)
+    func killApp(_ command: CDVInvokedUrlCommand) { terminateApp(command: command) }
+    
+    @objc(closeApp:)
+    func closeApp(_ command: CDVInvokedUrlCommand) { terminateApp(command: command) }
+    
+    private func terminateApp(command: CDVInvokedUrlCommand) {
+        self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_OK), callbackId: command.callbackId)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            exit(0) // Harter Exit (von Apple eigentlich ungern gesehen, im Enterprise-Sektor oft genutzt)
+        }
+    }
+    
+    // MARK: - Android-spezifische Stubs (Unter iOS ohne Funktion)
+    
+    @objc(isActionAvailable:)
+    func isActionAvailable(_ command: CDVInvokedUrlCommand) {
+        isPackageAvailable(command) // Fallback auf URL Scheme Check
+    }
+    
+    @objc(readDataFromContentUri:)
+    func readDataFromContentUri(_ command: CDVInvokedUrlCommand) { sendNotSupportedError(command: command) }
+    
+    @objc(getRealPathFromContentUrl:)
+    func getRealPathFromContentUrl(_ command: CDVInvokedUrlCommand) { sendNotSupportedError(command: command) }
+    
+    @objc(open:)
+    func open(_ command: CDVInvokedUrlCommand) { sendNotSupportedError(command: command) }
+    
+    @objc(getUriForFile:)
+    func getUriForFile(_ command: CDVInvokedUrlCommand) { sendNotSupportedError(command: command) }
+    
+    @objc(deleteUri:)
+    func deleteUri(_ command: CDVInvokedUrlCommand) { sendNotSupportedError(command: command) }
+    
+    @objc(getIcons:)
+    func getIcons(_ command: CDVInvokedUrlCommand) { sendNotSupportedError(command: command) }
+    
+    @objc(getAllIcons:)
+    func getAllIcons(_ command: CDVInvokedUrlCommand) { sendNotSupportedError(command: command) }
+    
+    private func sendNotSupportedError(command: CDVInvokedUrlCommand) {
+        self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Not implemented on iOS"), callbackId: command.callbackId)
+    }
+}
