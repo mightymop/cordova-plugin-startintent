@@ -30,6 +30,9 @@
 		<source-file src="src/android/provider_paths.xml" target-dir="res/xml"/>
 	</platform>
 	<platform name="ios">
+	   	<hook type="after_plugin_add" src="hooks/ios/installScenePatch.js" />
+		<hook type="after_prepare" src="hooks/ios/installScenePatch.js" />
+		<hook type="before_plugin_uninstall" src="hooks/ios/uninstallScenePatch.js" />
 		<config-file target="config.xml" parent="/*">
 			<!-- Der Name muss exakt mit @objc(StartIntentPlugin) in Swift übereinstimmen -->
 			<feature name="startintent">
@@ -80,7 +83,8 @@
 				<pod name="AppAuth" spec="~> 1.6.2"/>
 			</pods>
 		</podspec>
-		<!-- Deine Swift Dateien -->
-		<source-file src="src/ios/StartIntentPlugin.swift"/>
+	
+		<source-file src="src/ios/StartIntentContext.swift" />
+		<source-file src="src/ios/StartIntentPlugin.swift" />
 	</platform>
 </plugin>

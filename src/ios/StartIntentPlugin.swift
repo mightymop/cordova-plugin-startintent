@@ -3,30 +3,24 @@ import Cordova
 
 @objc(StartIntentPlugin)
 class StartIntentPlugin: CDVPlugin {
-    
-    var firstIntentData: [String: Any]?
+  
     var onNewIntentCallbackId: String?
     
     // MARK: - App Start & Intent Handling
     
     override func pluginInitialize() {
         super.pluginInitialize()
-        // Lauscht auf eintreffende URLs (wenn die App bereits im Hintergrund offen ist)
-        NotificationCenter.default.addObserver(self, selector: #selector(handleOpenURL(_:)), name: NSNotification.Name.CDVPluginHandleOpenURL, object: nil)
     }
-    
+
     // Fängt die URL ab, über die die App aufgerufen wurde (Erzeuger/Konsument)
     @objc override func handleOpenURL(_ notification: Notification) {
         guard let url = notification.object as? URL else { return }
         
+        let urlString = url.absoluteString
+        print("[Plugin] Boom! URL gefangen: \(urlString)")
         // Parameter der eingehenden Uri auflösen (wie in Spezifikation gefordert)
         let parsedData = parseUrlToIntentData(url: url)
-      
-        if (self.firstIntentData==nil)
-        {
-            self.firstIntentData = parsedData
-        }
-        
+                     
         // JavaScript Listener benachrichtigen, falls registriert
         if let callbackId = onNewIntentCallbackId {
             let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: parsedData)
@@ -156,12 +150,26 @@ class StartIntentPlugin: CDVPlugin {
     
     @objc(getCordovaIntent:)
     func getCordovaIntent(_ command: CDVInvokedUrlCommand) {
+
         let result: CDVPluginResult
-        if let intentData = self.firstIntentData {
-            result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: intentData)
-        } else {
-            result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: [String: Any]())
+
+        guard let url = StartIntentContext.url else {
+            result = CDVPluginResult(
+                status: CDVCommandStatus_OK,
+                messageAs: "{}"
+            )
+
+            self.commandDelegate.send(result, callbackId: command.callbackId)
+            return
         }
+
+        let parsedData = parseUrlToIntentData(url: url)
+
+        result = CDVPluginResult(
+            status: CDVCommandStatus_OK,
+            messageAs: parsedData
+        )
+
         self.commandDelegate.send(result, callbackId: command.callbackId)
     }
     
@@ -170,8 +178,7 @@ class StartIntentPlugin: CDVPlugin {
         self.onNewIntentCallbackId = command.callbackId
         
         let result = CDVPluginResult(status: CDVCommandStatus_NO_RESULT)
-        
-        // Removed the '?' from result:
+
         result.setKeepCallbackAs(true) // Hält den Callback offen für zukünftige App-Aufrufe
         
         self.commandDelegate.send(result, callbackId: command.callbackId)
