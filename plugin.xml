@@ -31,9 +31,10 @@
 	</platform>
 	<platform name="ios">
 		<config-file target="config.xml" parent="/*">
-			<!-- Der Name muss exakt mit @objc(StarttentPlugin) in Swift übereinstimmen -->
+			<!-- Der Name muss exakt mit @objc(StartIntentPlugin) in Swift übereinstimmen -->
 			<feature name="startintent">
-				<param name="ios-package" value="StarttentPlugin"/>
+				<param name="ios-package" value="StartIntentPlugin"/>
+				<param name="onload" value="true" />
 			</feature>
 		</config-file>
 		<!--config-file target="*-Info.plist" parent="LSApplicationQueriesSchemes">
@@ -41,7 +42,22 @@
 				<string>de.dtpublic.notes.service</string>        
 			</array>
 		</config-file-->
-		<!-- Weitere mögliche Ziel-Schemata im Array oben -->
+	
+
+	
+		<!--config-file target="*-Info.plist" parent="CFBundleURLTypes">
+        <array>
+            <dict>
+                <key>CFBundleURLName</key>
+                <string>com.deinefirma.deineapp</string> 
+                <key>CFBundleURLSchemes</key>
+                <array>
+                    <string>meineapp</string> 
+                </array>
+            </dict>
+        </array>
+    </config-file-->
+		
 		<config-file target="*-Info.plist" parent="CFBundleURLTypes">
 			<array>
 				<dict>
@@ -65,6 +81,6 @@
 			</pods>
 		</podspec>
 		<!-- Deine Swift Dateien -->
-		<source-file src="src/ios/StartIntentPlugin.swift"/>>
+		<source-file src="src/ios/StartIntentPlugin.swift"/>
 	</platform>
 </plugin>

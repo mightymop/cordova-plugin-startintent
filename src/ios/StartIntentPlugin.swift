@@ -1,10 +1,10 @@
 import Foundation
 import Cordova
 
-@objc(StarttentPlugin)
-class StarttentPlugin: CDVPlugin {
+@objc(StartIntentPlugin)
+class StartIntentPlugin: CDVPlugin {
     
-    var lastIntentData: [String: Any]?
+    var firstIntentData: [String: Any]?
     var onNewIntentCallbackId: String?
     
     // MARK: - App Start & Intent Handling
@@ -21,12 +21,17 @@ class StarttentPlugin: CDVPlugin {
         
         // Parameter der eingehenden Uri auflösen (wie in Spezifikation gefordert)
         let parsedData = parseUrlToIntentData(url: url)
-        self.lastIntentData = parsedData
+      
+        if (self.firstIntentData==nil)
+        {
+            self.firstIntentData = parsedData
+        }
         
         // JavaScript Listener benachrichtigen, falls registriert
         if let callbackId = onNewIntentCallbackId {
             let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: parsedData)
-            result?.setKeepCallbackAs(true)
+      
+            result.setKeepCallbackAs(true)
             self.commandDelegate.send(result, callbackId: callbackId)
         }
     }
@@ -52,30 +57,34 @@ class StarttentPlugin: CDVPlugin {
     // MARK: - Cordova Interface Methoden (Senden / Prüfen)
     
     @objc(isPackageAvailable:)
-    func isPackageAvailable(_ command: CDVInvokedUrlCommand) {
-        var schemeToCheck = ""
-        
-        if let params = command.arguments.first as? [String: Any],
-           let scheme = params["package"] as? String ?? params["scheme"] as? String {
-            schemeToCheck = scheme
-        } else if let scheme = command.arguments.first as? String {
-            schemeToCheck = scheme
+        func isPackageAvailable(_ command: CDVInvokedUrlCommand) {
+            // Android nutzt data.getJSONArray(0), wir erwarten also als erstes Argument ein String-Array
+            guard let schemesToCheck = command.arguments.first as? [String] else {
+                self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid arguments. Expected an array of schemes."), callbackId: command.callbackId)
+                return
+            }
+            
+            var availableSchemes: [String] = []
+            
+            for scheme in schemesToCheck {
+                if scheme.isEmpty { continue }
+                
+                // Entfernt ggf. "://" vom String, um ein sauberes URL Objekt zu erzeugen
+                let cleanScheme = scheme.replacingOccurrences(of: "://", with: "")
+                
+                if let url = URL(string: "\(cleanScheme)://") {
+                    // Prüft, ob die App auf dem iOS-Gerät installiert ist
+                    if UIApplication.shared.canOpenURL(url) {
+                        // Wenn ja, fügen wir das exakte Scheme (so wie es angefragt wurde) zum Ergebnis hinzu
+                        availableSchemes.append(scheme)
+                    }
+                }
+            }
+            
+            // Analog zu Android geben wir ein Array (hier als [String]) zurück
+            let result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: availableSchemes)
+            self.commandDelegate.send(result, callbackId: command.callbackId)
         }
-        
-        if schemeToCheck.isEmpty {
-            self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Missing scheme"), callbackId: command.callbackId)
-            return
-        }
-        
-        // Entfernt ggf. "://" vom String, um ein sauberes URL Objekt zu erzeugen
-        let cleanScheme = schemeToCheck.replacingOccurrences(of: "://", with: "")
-        if let url = URL(string: "\(cleanScheme)://") {
-            let canOpen = UIApplication.shared.canOpenURL(url)
-            self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_OK, messageAs: canOpen), callbackId: command.callbackId)
-        } else {
-            self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid URL scheme format"), callbackId: command.callbackId)
-        }
-    }
     
     @objc(startApplicationFromCordova:)
     func startApplicationFromCordova(_ command: CDVInvokedUrlCommand) {
@@ -148,7 +157,7 @@ class StarttentPlugin: CDVPlugin {
     @objc(getCordovaIntent:)
     func getCordovaIntent(_ command: CDVInvokedUrlCommand) {
         let result: CDVPluginResult
-        if let intentData = lastIntentData {
+        if let intentData = self.firstIntentData {
             result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: intentData)
         } else {
             result = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: [String: Any]())
@@ -157,10 +166,14 @@ class StarttentPlugin: CDVPlugin {
     }
     
     @objc(setNewIntentHandler:)
-    func setNewetentHandler(_ command: CDVInvokedUrlCommand) {
+    func setNewIntentHandler(_ command: CDVInvokedUrlCommand) {
         self.onNewIntentCallbackId = command.callbackId
+        
         let result = CDVPluginResult(status: CDVCommandStatus_NO_RESULT)
-        result?.setKeepCallbackAs(true) // Hält den Callback offen für zukünftige App-Aufrufe
+        
+        // Removed the '?' from result:
+        result.setKeepCallbackAs(true) // Hält den Callback offen für zukünftige App-Aufrufe
+        
         self.commandDelegate.send(result, callbackId: command.callbackId)
     }
     
