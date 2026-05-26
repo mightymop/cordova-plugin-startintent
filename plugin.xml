@@ -69,7 +69,7 @@
 					<key>CFBundleURLSchemes</key>
 					<array>
 						<!-- Hier NUR das Schema ohne :// eintragen -->						
-						<string>$PACKAGE_NAME.input</string>
+						<string>$PACKAGE_NAME</string>
 					</array>
 				</dict>
 			</array>
