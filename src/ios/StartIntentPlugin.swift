@@ -91,33 +91,49 @@ class StartIntentPlugin: CDVPlugin {
     }
     
     private func handleInterAppCall(command: CDVInvokedUrlCommand) {
-        guard let params = command.arguments.first as? [String: Any] else {
-            self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid parameters"), callbackId: command.callbackId)
-            return
-        }
-        
-        let scheme = params["package"] as? String ?? params["scheme"] as? String ?? params["action"] as? String ?? ""
-        var urlString = "\(scheme)://?"
-        
-        // Parameter auflösen (z.B. callbackurl, mode, binary_contentparameter)
-        if let extras = params["extras"] as? [String: Any] {
-            var queryItems: [String] = []
-            
-            // Spezifikation: "Die Werte der Parameter müssen Url kodiert werden"
-            var allowedChars = CharacterSet.urlQueryAllowed
-            allowedChars.remove(charactersIn: "!*'();:@&=+$,/?%#[]")
-            
-            for (key, value) in extras {
-                let stringValue = "\(value)"
-                if let encodedValue = stringValue.addingPercentEncoding(withAllowedCharacters: allowedChars) {
-                    queryItems.append("\(key)=\(encodedValue)")
-                }
-            }
-            urlString += queryItems.joined(separator: "&") // Spezifikation: Parameter werden durch "&" getrennt
-        }
-        
-        openUrlString(urlString, command: command)
-    }
+		guard let params = command.arguments.first as? [String: Any] else {
+			self.commandDelegate.send(CDVPluginResult(status: CDVCommandStatus_ERROR, messageAs: "Invalid parameters"), callbackId: command.callbackId)
+			return
+		}
+		
+		let scheme = params["package"] as? String ?? params["scheme"] as? String ?? params["action"] as? String ?? ""
+		var urlString = "\(scheme)://?"
+		
+		var queryItems: [String] = []
+		
+		// Spezifikation: "Die Werte der Parameter müssen Url kodiert werden"
+		var allowedChars = CharacterSet.urlQueryAllowed
+		allowedChars.remove(charactersIn: "!*'();:@&=+$,/?%#[]")
+		
+		// Hilfsfunktion zum sauberen Hinzufügen der Parameter
+		func addQueryItem(key: String, value: Any) {
+			let stringValue = "\(value)"
+			if let encodedValue = stringValue.addingPercentEncoding(withAllowedCharacters: allowedChars) {
+				queryItems.append("\(key)=\(encodedValue)")
+			}
+		}
+		
+		// 1. "extras" Dictionary auflösen
+		if let extras = params["extras"] as? [String: Any] {
+			for (key, value) in extras {
+				addQueryItem(key: key, value: value)
+			}
+		}
+		
+		// 2. Restliche Root-Parameter auflösen
+		// Ignoriere Keys, die bereits verarbeitet wurden oder zur Steuerung dienen
+		let ignoredKeys: Set<String> = ["flags", "extras", "package", "scheme", "action"]
+		
+		for (key, value) in params {
+			if !ignoredKeys.contains(key) {
+				addQueryItem(key: key, value: value)
+			}
+		}
+		
+		urlString += queryItems.joined(separator: "&") // Spezifikation: Parameter werden durch "&" getrennt
+		
+		openUrlString(urlString, command: command)
+	}
     
     @objc(openurl:)
     func openurl(_ command: CDVInvokedUrlCommand) {
