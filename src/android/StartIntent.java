@@ -329,6 +329,7 @@ public class StartIntent extends CordovaPlugin {
         callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.OK, ""));
         Log.d(pluginName, "Exiting App...");
 		this.cordova.getActivity().finishAffinity();  
+		android.os.Process.killProcess(android.os.Process.myPid());
 		Log.d(pluginName, "finish() called");
         new java.util.Timer().schedule(new java.util.TimerTask() {
 			@Override
