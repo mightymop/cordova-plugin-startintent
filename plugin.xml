@@ -79,9 +79,6 @@
 			<config>
 				<source url="https://github.com/CocoaPods/Specs.git"/>
 			</config>
-			<pods use-frameworks="true">
-				<pod name="AppAuth" spec="~> 1.6.2"/>
-			</pods>
 		</podspec>
 	
 		<source-file src="src/ios/StartIntentContext.swift" />
